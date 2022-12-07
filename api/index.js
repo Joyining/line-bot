@@ -10,11 +10,11 @@ app.use(express.urlencoded({
   extended: true
 }))
 
-app.get("/", (req, res) => {
+app.get("/api", (req, res) => {
   res.sendStatus(200)
 })
 
-app.post("/webhook", function(req, res) {
+app.post("/api/webhook", function(req, res) {
   res.send("HTTP POST request sent to the webhook URL!")
   // If the user sends a message to your bot, send a reply message
   if (req.body.events[0].type === "message") {
