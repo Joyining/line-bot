@@ -1,5 +1,6 @@
 const https = require("https")
 const express = require("express")
+const axios = require("axios")
 const app = express()
 
 const PORT = process.env.PORT || 3000
@@ -14,8 +15,7 @@ app.get("/api", (req, res) => {
   res.sendStatus(200)
 })
 
-app.post("/api/webhook", function(req, res) {
-  res.send("HTTP POST request sent to the webhook URL!")
+app.post("/api/webhook", async function(req, res) {
   // If the user sends a message to your bot, send a reply message
   if (req.body.events[0].type === "message") {
     // Message data, must be stringified
@@ -39,30 +39,20 @@ app.post("/api/webhook", function(req, res) {
       "Authorization": "Bearer " + TOKEN
     }
 
-    // Options to pass into the request
-    const webhookOptions = {
-      "hostname": "api.line.me",
-      "path": "/v2/bot/message/reply",
-      "method": "POST",
-      "headers": headers,
-      "body": dataString
+    try {
+      const res = await axios.post(
+        "https://api.line.me/v2/bot/message/reply", 
+        dataString,
+        {
+          headers,
+        })
+      console.log(res.data)
+      // process.stdout.write(res.data)
+    } catch (error) {
+      console.error(error)
     }
 
-    // Define request
-    const request = https.request(webhookOptions, (res) => {
-      res.on("data", (d) => {
-        process.stdout.write(d)
-      })
-    })
-
-    // Handle error
-    request.on("error", (err) => {
-      console.error(err)
-    })
-
-    // Send data
-    request.write(dataString)
-    request.end()
+    res.send("HTTP POST request sent to the webhook URL!")
   }
 })
 
