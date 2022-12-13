@@ -8,6 +8,7 @@ const fetchMovies = async () => {
     );
     return response.data;
   } catch (error) {
+    console.error(error);
     return [];
   }
 };
@@ -27,12 +28,11 @@ const fetchSchedule = async ({
   movieId,
   date: inputDate = '',
 }) => {
-  // TODO: allow user assign area
-  const areaId = 28;
+  // TODO: time utils
   const date = inputDate ? new Date(inputDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
   try {
     const response = await axios.get(
-      `https://movies.yahoo.com.tw/ajax/pc/get_schedule_by_movie?movie_id=${movieId}&area_id=${areaId}&date=${date}`,
+      `https://movies.yahoo.com.tw/ajax/pc/get_schedule_by_movie?movie_id=${movieId}&date=${date}`,
     );
     const { view } = response.data;
     const $ = cheerio.load(view);
@@ -53,7 +53,7 @@ const fetchSchedule = async ({
     return schedule;
   } catch (error) {
     console.error(error);
-    return error;
+    return [];
   }
 };
 
