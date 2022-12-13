@@ -23,11 +23,13 @@ const getMovie = async (movieName) => {
   };
 };
 
-const fetchSchedule = async (movieId) => {
+const fetchSchedule = async ({
+  movieId,
+  date: inputDate = '',
+}) => {
   // TODO: allow user assign area
-  // TODO: allow user assign date
   const areaId = 28;
-  const date = '2022-12-13';
+  const date = inputDate ? new Date(inputDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
   try {
     const response = await axios.get(
       `https://movies.yahoo.com.tw/ajax/pc/get_schedule_by_movie?movie_id=${movieId}&area_id=${areaId}&date=${date}`,
@@ -63,23 +65,36 @@ const myTheaters = [
   '台北天母新光影城',
 ];
 
-const getMySchedule = async (movieId) => {
-  const schedule = await fetchSchedule(movieId);
+const getMySchedule = async ({
+  movieId,
+  date,
+}) => {
+  const schedule = await fetchSchedule({
+    movieId,
+    date,
+  });
   return schedule.filter((theater) => myTheaters.includes(theater.name));
 };
 
-const getMessages = async (movieName) => {
+const getMessages = async ({
+  movieName,
+  date: inputDate = '',
+}) => {
   let messages = [];
+  const date = inputDate ? new Date(inputDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
   const movie = await getMovie(movieName);
   if (!movie) {
     messages.push({
       type: 'text',
-      text: `${movieName} 在 2022-12-13 沒有在您指定的電影院上映`,
+      text: `${movieName} 在 ${date} 沒有在您指定的電影院上映`,
     });
     return messages;
   }
   const { movieId, fullMovieName } = movie;
-  const mySchedule = await getMySchedule(movieId);
+  const mySchedule = await getMySchedule({
+    movieId,
+    date,
+  });
   messages = mySchedule.map((s) => {
     const times = s.times.join(' / ');
     return {
@@ -87,7 +102,7 @@ const getMessages = async (movieName) => {
       text: `${s.name}: ${times}`,
     };
   });
-  const titleText = mySchedule.length === 0 ? `${fullMovieName} 在 2022-12-13 沒有在您指定的電影院上映` : `${fullMovieName} 在 2022-12-13 的放映時間`;
+  const titleText = mySchedule.length === 0 ? `${fullMovieName} 在 ${date} 沒有在您指定的電影院上映` : `${fullMovieName} 在 ${date} 的放映時間`;
   messages.unshift({
     type: 'text',
     text: titleText,

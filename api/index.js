@@ -19,9 +19,13 @@ app.get('/api', (req, res) => {
 app.post('/api/webhook', async (req, res) => {
   // If the user sends a message to your bot, send a reply message
   if (req.body.events[0].type === 'message') {
-    const movieName = req.body.events[0].message.text;
+    const input = req.body.events[0].message.text.split(' ');
+    const [movieName, date] = input;
     // Message data, must be stringified
-    const messages = await getMessages(movieName);
+    const messages = await getMessages({
+      movieName,
+      date,
+    });
     const dataString = JSON.stringify({
       replyToken: req.body.events[0].replyToken,
       messages,
