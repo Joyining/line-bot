@@ -1,5 +1,6 @@
 const express = require('express');
 const axios = require('axios');
+const { getMySchedule } = require('../crawler/movie');
 
 const app = express();
 
@@ -19,18 +20,17 @@ app.post('/api/webhook', async (req, res) => {
   // If the user sends a message to your bot, send a reply message
   if (req.body.events[0].type === 'message') {
     // Message data, must be stringified
+    const schedule = await getMySchedule('哈勇家');
+    const messages = schedule.map((s) => {
+      const times = s.times.join('/');
+      return {
+        type: 'text',
+        text: `${s.name}: ${times}`,
+      };
+    });
     const dataString = JSON.stringify({
       replyToken: req.body.events[0].replyToken,
-      messages: [
-        {
-          type: 'text',
-          text: 'Hello, user',
-        },
-        {
-          type: 'text',
-          text: 'May I help you?',
-        },
-      ],
+      messages,
     });
 
     // Request header
