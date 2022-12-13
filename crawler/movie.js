@@ -16,6 +16,7 @@ const getMovie = async (movieName) => {
   const movies = await fetchMovies();
   if (movies.length === 0) return null;
   const targetMovie = Object.entries(movies).find(([, value]) => value.includes(movieName));
+  if (!targetMovie) return null;
   return {
     movieId: targetMovie[0],
     fullMovieName: targetMovie[1],
@@ -68,16 +69,25 @@ const getMySchedule = async (movieId) => {
 };
 
 const getMessages = async (movieName) => {
-  const { movieId, fullMovieName } = await getMovie(movieName);
+  let messages = [];
+  const movie = await getMovie(movieName);
+  if (!movie) {
+    messages.push({
+      type: 'text',
+      text: `${movieName} 在 2022-12-13 沒有在您指定的電影院上映`,
+    });
+    return messages;
+  }
+  const { movieId, fullMovieName } = movie;
   const mySchedule = await getMySchedule(movieId);
-  const messages = mySchedule.map((s) => {
-    const times = s.times.join('/');
+  messages = mySchedule.map((s) => {
+    const times = s.times.join(' / ');
     return {
       type: 'text',
       text: `${s.name}: ${times}`,
     };
   });
-  const titleText = mySchedule.length === 0 ? '這部電影在您指定的電影院沒有上映' : `${fullMovieName} 在 2022-12-13 的放映時間`;
+  const titleText = mySchedule.length === 0 ? `${fullMovieName} 在 2022-12-13 沒有在您指定的電影院上映` : `${fullMovieName} 在 2022-12-13 的放映時間`;
   messages.unshift({
     type: 'text',
     text: titleText,
