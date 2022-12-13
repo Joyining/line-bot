@@ -12,15 +12,17 @@ const fetchMovies = async () => {
   }
 };
 
-const getMovieId = async (movieName) => {
+const getMovie = async (movieName) => {
   const movies = await fetchMovies();
   if (movies.length === 0) return null;
   const targetMovie = Object.entries(movies).find(([, value]) => value.includes(movieName));
-  return targetMovie[0];
+  return {
+    movieId: targetMovie[0],
+    fullMovieName: targetMovie[1],
+  };
 };
 
-const fetchSchedule = async (movieName) => {
-  const movieId = await getMovieId(movieName);
+const fetchSchedule = async (movieId) => {
   // TODO: allow user assign area
   // TODO: allow user assign date
   const areaId = 28;
@@ -60,13 +62,29 @@ const myTheaters = [
   '台北天母新光影城',
 ];
 
-const getMySchedule = async (movieName) => {
-  const schedule = await fetchSchedule(movieName);
-  const mySchedule = schedule.filter((theater) => myTheaters.includes(theater.name));
-  const result = mySchedule.length === 0 ? '這部電影在您指定的電影院沒有上映' : mySchedule;
-  return result;
+const getMySchedule = async (movieId) => {
+  const schedule = await fetchSchedule(movieId);
+  return schedule.filter((theater) => myTheaters.includes(theater.name));
+};
+
+const getMessages = async (movieName) => {
+  const { movieId, fullMovieName } = await getMovie(movieName);
+  const mySchedule = await getMySchedule(movieId);
+  const messages = mySchedule.map((s) => {
+    const times = s.times.join('/');
+    return {
+      type: 'text',
+      text: `${s.name}: ${times}`,
+    };
+  });
+  const titleText = mySchedule.length === 0 ? '這部電影在您指定的電影院沒有上映' : `${fullMovieName} 在 2022-12-13 的放映時間`;
+  messages.unshift({
+    type: 'text',
+    text: titleText,
+  });
+  return messages;
 };
 
 module.exports = {
-  getMySchedule,
+  getMessages,
 };
