@@ -1,6 +1,27 @@
 const axios = require('axios');
 const cheerio = require('cheerio');
 
+const fetchTheaters = async (area) => {
+  const results = [];
+  try {
+    const response = await axios.get(
+      'https://movies.yahoo.com.tw/theater_list.html',
+    );
+    const view = response.data;
+    const $ = cheerio.load(view);
+    const theaters = $(`div.theater_top:contains("${area}") + ul li`);
+    theaters.each((index, element) => {
+      const name = $(element).find('div.name').text();
+      if (name) {
+        results.push(name.trim());
+      }
+    });
+  } catch (error) {
+    console.error(error);
+  }
+  return results;
+};
+
 const fetchMovies = async () => {
   try {
     const response = await axios.get(
@@ -13,7 +34,7 @@ const fetchMovies = async () => {
   }
 };
 
-const getMovie = async (movieName) => {
+const fetchMovie = async (movieName) => {
   const movies = await fetchMovies();
   if (movies.length === 0) return null;
   const targetMovie = Object.entries(movies).find(([, value]) => value.includes(movieName));
@@ -82,7 +103,7 @@ const getMessages = async ({
 }) => {
   let messages = [];
   const date = inputDate ? new Date(inputDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
-  const movie = await getMovie(movieName);
+  const movie = await fetchMovie(movieName);
   if (!movie) {
     messages.push({
       type: 'text',
@@ -112,4 +133,5 @@ const getMessages = async ({
 
 module.exports = {
   getMessages,
+  fetchTheaters,
 };
